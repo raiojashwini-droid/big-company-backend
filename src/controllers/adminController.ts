@@ -73,15 +73,15 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
 
     let salesRevenue = 0;
     for (const sale of sales) {
-        if (!sale.retailerId) continue;
-        if (!retailerMap.has(sale.retailerId)) continue; // Skip if retailer was deleted
+      if (!sale.retailerId) continue;
+      if (!retailerMap.has(sale.retailerId)) continue; // Skip if retailer was deleted
 
-        const settleDate = retailerMap.get(sale.retailerId);
-        if (settleDate && sale.createdAt < settleDate) continue;
-        
-        for (const item of sale.saleItems) {
-            salesRevenue += item.price * item.quantity;
-        }
+      const settleDate = retailerMap.get(sale.retailerId);
+      if (settleDate && sale.createdAt < settleDate) continue;
+
+      for (const item of sale.saleItems) {
+        salesRevenue += item.price * item.quantity;
+      }
     }
 
     let wholesaleRevenue = 0;
@@ -92,7 +92,7 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
 
         const settleDate = wholesalerMap.get(order.wholesalerId);
         if (settleDate && order.createdAt < settleDate) continue;
-        
+
         wholesaleRevenue += order.totalAmount;
       }
     }
@@ -109,7 +109,7 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
     const gasPurchases = txs.filter(t => t.type === 'gas_payment' || t.type === 'gas_purchase').length;
     const nfcPayments = sales.filter(s => s.paymentMethod === 'nfc' || s.paymentMethod === 'nfc_card')
       .filter(s => s.createdAt >= last30d && (lastProfitResetDate ? s.createdAt >= lastProfitResetDate : true)).length;
-    
+
     // Only count DEBIT (outflow) wallet transactions to avoid double-counting
     // transfers/reward-shares (which create both a debit and a credit record).
     // ALSO exclude gas_meter_recharge debits — those are counted via GasTopup table below.
@@ -120,7 +120,7 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
       .reduce((acc, t) => acc + Math.abs(t.amount), 0);
 
     const walletPaymentMethods = ['wallet', 'dashboard_wallet', 'credit_wallet', 'nfc_card', 'nfc', 'dashboard', 'credit'];
-    
+
     // Exclude gas-recharge Sales because the same payment is already captured 
     // in directGasVolume via the GasTopup table.
     const directSalesVolume = sales
@@ -135,7 +135,7 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
         const hasPosOrOrdRef = s.meterId && (s.meterId.startsWith('POS-') || s.meterId.startsWith('ORD-'));
         const hasSaleItems = s.saleItems && s.saleItems.length > 0;
         const isUssdOrder = s.paymentMethod === 'ussd_callback';
-        
+
         return hasPosOrOrdRef || hasSaleItems || isUssdOrder;
       })
       .reduce((acc, s) => acc + s.totalAmount, 0);
@@ -195,7 +195,7 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
     const customerLoanRepayments = await prisma.walletTransaction.findMany({
       where: { type: 'loan_repayment_replenish' }
     });
-    
+
     const customerLoanOutstanding = loans.reduce((acc, l) => {
       if (l.status === 'active' || l.status === 'approved' || l.status === 'defaulted' || l.status === 'overdue') {
         const interestAmount = Math.round(l.amount * (customerRate / 100));
@@ -205,14 +205,14 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
       }
       return acc;
     }, 0);
-    
+
     const retailerOutstanding = retailerLoans.reduce((acc, l) => {
       if (l.status === 'active' || l.status === 'approved' || l.status === 'defaulted' || l.status === 'overdue') {
         return acc + Math.max(0, l.remainingAmount || 0);
       }
       return acc;
     }, 0);
-    
+
     const outstandingAmount = Math.round(customerLoanOutstanding + retailerOutstanding);
 
     // 5. Gas (using GasTopup or Sale with gas category)
@@ -441,11 +441,11 @@ export const getReports = async (req: AuthRequest, res: Response) => {
 
     let salesRevenue = 0;
     for (const sale of sales) {
-        if (!sale.retailerId) continue;
-        if (!retailerMap.has(sale.retailerId)) continue;
-        for (const item of sale.saleItems) {
-            salesRevenue += item.price * item.quantity;
-        }
+      if (!sale.retailerId) continue;
+      if (!retailerMap.has(sale.retailerId)) continue;
+      for (const item of sale.saleItems) {
+        salesRevenue += item.price * item.quantity;
+      }
     }
 
     const wholesaleRevenue = wholesaleOrders.filter(o => o.status === 'delivered').reduce((acc, o) => acc + o.totalAmount, 0);
@@ -709,7 +709,7 @@ export const getCustomers = async (req: AuthRequest, res: Response) => {
       // EXCLUDE GAS TOP-UPS from orders count using reliable criteria instead of meterId
       const isUssdOrder = sale.paymentMethod === 'ussd_callback';
       const hasGasItem = sale.saleItems && sale.saleItems.some(item => gasProductIds.has(item.productId));
-      
+
       if (!hasGasItem && (isUssdOrder || (sale.saleItems && sale.saleItems.length > 0))) {
         totalPlatformOrders++;
       }
@@ -1450,7 +1450,7 @@ export const deleteRetailer = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const retailer = await prisma.retailerProfile.findUnique({ where: { id: Number(id) } });
-    
+
     if (retailer) {
       const consumerProfile = await prisma.consumerProfile.findFirst({
         where: { userId: retailer.userId },
@@ -1532,7 +1532,7 @@ export const deleteRetailer = async (req: AuthRequest, res: Response) => {
       // Execute all ops safely in a single transaction
       await prisma.$transaction(transactionOps);
     }
-    
+
     res.json({ success: true, message: 'Retailer deleted' });
   } catch (error: any) {
     console.error('Delete Retailer Error:', error);
@@ -1670,7 +1670,7 @@ export const deleteWholesaler = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const wholesaler = await prisma.wholesalerProfile.findUnique({ where: { id: Number(id) } });
-    
+
     if (wholesaler) {
       const consumerProfile = await prisma.consumerProfile.findFirst({
         where: { userId: wholesaler.userId },
@@ -1743,7 +1743,7 @@ export const deleteWholesaler = async (req: AuthRequest, res: Response) => {
       // Execute all ops safely in a single transaction
       await prisma.$transaction(transactionOps);
     }
-    
+
     res.json({ success: true, message: 'Wholesaler deleted' });
   } catch (error: any) {
     console.error('Delete Wholesaler Error:', error);
@@ -1921,7 +1921,7 @@ export const updateCustomer = async (req: AuthRequest, res: Response) => {
 
     await prisma.consumerProfile.update({
       where: { id: Number(id) },
-      data: { 
+      data: {
         fullName: `${firstName} ${lastName}`,
         ...(gasRewardWalletIdUpdate && { gasRewardWalletId: gasRewardWalletIdUpdate })
       }
@@ -2100,6 +2100,8 @@ export const deleteCustomer = async (req: AuthRequest, res: Response) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+
 
 // Get all products (Aggregated by SKU/Name for total stock)
 export const getProducts = async (req: AuthRequest, res: Response) => {
@@ -2815,7 +2817,7 @@ export const registerNFCCard = async (req: AuthRequest, res: Response) => {
     });
     if (existingUid) return res.status(400).json({ error: 'NFC Card with this UID already exists' });
 
-    const existingCardNumber = await prisma.nfcCard.findFirst({ where: { cardNumber } }); 
+    const existingCardNumber = await prisma.nfcCard.findFirst({ where: { cardNumber } });
     if (existingCardNumber) return res.status(400).json({ error: 'NFC Card with this Card Number already exists' });
 
     // Try to link to a consumer
@@ -2879,28 +2881,28 @@ export const adminLinkCard = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { userId } = req.body;
-    
+
     if (!userId) return res.status(400).json({ success: false, error: 'Customer ID is required' });
-    
+
     const card = await prisma.nfcCard.findUnique({ where: { id: Number(id) } });
     if (!card) return res.status(404).json({ success: false, error: 'Card not found' });
-    
+
     if (card.consumerId) return res.status(400).json({ success: false, error: 'Card is already linked to a customer' });
 
     // Try to find the consumer profile either by userId or consumerProfile id
     let consumerId = null;
     let cardholderName = null;
-    
-    const profileByUserId = await prisma.consumerProfile.findUnique({ 
+
+    const profileByUserId = await prisma.consumerProfile.findUnique({
       where: { userId: Number(userId) },
       include: { user: true }
     });
-    
+
     if (profileByUserId) {
       consumerId = profileByUserId.id;
       cardholderName = profileByUserId.fullName || profileByUserId.user?.name || null;
     } else {
-      const profileById = await prisma.consumerProfile.findUnique({ 
+      const profileById = await prisma.consumerProfile.findUnique({
         where: { id: Number(userId) },
         include: { user: true }
       });
@@ -2911,16 +2913,16 @@ export const adminLinkCard = async (req: AuthRequest, res: Response) => {
     }
 
     if (!consumerId) return res.status(404).json({ success: false, error: 'Customer profile not found' });
-    
+
     await prisma.nfcCard.update({
       where: { id: Number(id) },
-      data: { 
-        consumerId: consumerId, 
+      data: {
+        consumerId: consumerId,
         status: 'active',
         cardholderName: cardholderName
       }
     });
-    
+
     res.json({ success: true, message: 'Card linked successfully' });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
@@ -2930,14 +2932,14 @@ export const adminLinkCard = async (req: AuthRequest, res: Response) => {
 export const adminUnlinkCard = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    
+
     const card = await prisma.nfcCard.findUnique({ where: { id: Number(id) } });
     if (!card) return res.status(404).json({ success: false, error: 'Card not found' });
-    
+
     await prisma.nfcCard.delete({
       where: { id: Number(id) }
     });
-    
+
     res.json({ success: true, message: 'Card unlinked successfully' });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
@@ -2948,17 +2950,17 @@ export const adminChangeNFCPin = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { new_pin } = req.body;
-    
+
     if (!new_pin) return res.status(400).json({ success: false, error: 'New PIN is required' });
-    
+
     const card = await prisma.nfcCard.findUnique({ where: { id: Number(id) } });
     if (!card) return res.status(404).json({ success: false, error: 'Card not found' });
-    
+
     await prisma.nfcCard.update({
       where: { id: Number(id) },
       data: { pin: new_pin }
     });
-    
+
     res.json({ success: true, message: 'Card PIN changed successfully' });
   } catch (error: any) {
     res.status(500).json({ success: false, error: error.message });
@@ -3044,11 +3046,11 @@ export const blockNFCCard = async (req: AuthRequest, res: Response) => {
 export const activateNFCCard = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    
+
     // First find the card to see if it's assigned to a customer
     const currentCard = await prisma.nfcCard.findUnique({ where: { id: Number(id) } });
     if (!currentCard) return res.status(404).json({ success: false, error: 'Card not found' });
-    
+
     // If assigned to a customer, activating it should make it 'active'. 
     // If not assigned, it stays 'available' in inventory.
     const newStatus = currentCard.consumerId ? 'active' : 'available';
@@ -3787,7 +3789,7 @@ export const getRetailerAccountDetails = async (req: AuthRequest, res: Response)
       completed: filteredCustomerCompleted.length,
       cancelled: filteredCustomerCancelled.length,
       total: retailer.sales.filter(s => s.status === 'pending').length + filteredCustomerCompleted.length + filteredCustomerCancelled.length,
-      totalRevenue: filteredCustomerRevenueSales.filter(s => 
+      totalRevenue: filteredCustomerRevenueSales.filter(s =>
         ['dashboard_wallet', 'wallet', 'credit_wallet', 'credit', 'mobile_money', 'ussd_callback'].includes(s.paymentMethod)
       ).reduce((sum, s) => sum + s.totalAmount, 0),
       dashboardWalletRevenue: filteredCustomerRevenueSales.filter(s => s.paymentMethod === 'dashboard_wallet' || s.paymentMethod === 'wallet').reduce((sum, s) => sum + s.totalAmount, 0),
@@ -5664,9 +5666,9 @@ export const adminGetGasMeters = async (req: AuthRequest, res: Response) => {
     // Only fetch ACTIVE meters — removed/unlinked meters are hidden (client requirement)
     const meters = await prisma.gasMeter.findMany({
       where: { status: { not: 'removed' } },
-      include: { 
+      include: {
         gasTopups: {
-          where: { 
+          where: {
             status: 'completed',
             ...(lastGasResetDate ? { createdAt: { gte: lastGasResetDate } } : {})
           }
@@ -5718,8 +5720,8 @@ export const adminGetGasMeters = async (req: AuthRequest, res: Response) => {
         const currentYear = now.getFullYear();
 
         // Get all topups for this consumer AND this meter number (matching history logic)
-        const meterHistoryTopups = allConsumerTopups.filter(t => 
-          t.consumerId === meter.consumerId && 
+        const meterHistoryTopups = allConsumerTopups.filter(t =>
+          t.consumerId === meter.consumerId &&
           t.gasMeter?.meterNumber === meter.meterNumber
         );
 
@@ -5798,7 +5800,7 @@ export const adminRegisterGasMeter = async (req: AuthRequest, res: Response) => 
       },
       orderBy: { id: 'desc' }
     });
-    
+
     // Find the best previous record (one that has isGprs: true, or has imei)
     const previousRecord = allPrevious.find(r => r.isGprs) || allPrevious.find(r => r.imei) || allPrevious[0];
 
@@ -5837,8 +5839,8 @@ export const adminUnlinkGasMeter = async (req: AuthRequest, res: Response) => {
     // if the same meter is linked again, it creates a completely new, clean database row.
     await prisma.gasMeter.update({
       where: { id: Number(id) },
-      data: { 
-        status: 'removed', 
+      data: {
+        status: 'removed',
         currentUnits: 0,
         aliasName: null,
         ownerName: null,
