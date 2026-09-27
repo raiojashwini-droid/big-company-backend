@@ -135,7 +135,10 @@ const getAdminTaxes = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         const retailerSettlementMap = new Map(allRetailers.map(r => [r.id, r]));
         const wholesalerSettlementMap = new Map(allWholesalers.map(w => [w.id, w]));
         const sales = yield prisma.sale.findMany({
-            where: { status: { in: ['completed', 'pending_payment', 'pending'] } },
+            where: {
+                status: { in: ['completed', 'pending_payment', 'pending'] },
+                saleItems: { some: {} }
+            },
             include: { saleItems: { include: { product: true } }, consumerProfile: true },
             orderBy: { createdAt: 'desc' },
             take: 1000

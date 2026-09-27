@@ -111,6 +111,10 @@ exports.emailWorker = new bullmq_1.Worker('email-queue', (job) => __awaiter(void
             // FIX: Use the RESOLVED template name (e.g. CUS-SMS-011) not the raw slug
             // so TemplateService can find the correct DB template
             const template = yield TemplateService.getTemplate(resolvedTemplateName, data);
+            if (template.abort) {
+                console.log(`[EmailWorker] Job ${job.id} aborted because template is inactive.`);
+                return;
+            }
             finalSubject = template.subject;
             finalHtml = template.html;
             if (template.isSMS !== undefined) {

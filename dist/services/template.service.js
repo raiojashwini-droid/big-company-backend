@@ -123,9 +123,13 @@ class TemplateService {
                 // 2. Fetch the actual template content
                 // @ts-ignore
                 const dbTemplate = yield globalPrisma.emailTemplate.findUnique({
-                    where: { name: templateName, isActive: true }
+                    where: { name: templateName }
                 });
                 if (dbTemplate) {
+                    if (!dbTemplate.isActive) {
+                        console.log(`[TemplateService] Template '${templateName}' is INACTIVE. Aborting message.`);
+                        return { subject: '', html: '', abort: true };
+                    }
                     const subject = this.render(dbTemplate.subject, data);
                     const content = this.render(dbTemplate.content, data);
                     const isSMS = dbTemplate.channel === 'SMS' || templateName.includes('SMS') || nameOrSlug.includes('SMS');

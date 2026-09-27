@@ -45,8 +45,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getRetailerAccountDetails = exports.getCustomerAccountDetails = exports.updateSystemConfig = exports.getSystemConfig = exports.getRevenueReport = exports.getTransactionReport = exports.unlinkNFCCard = exports.activateNFCCard = exports.blockNFCCard = exports.getNFCCardTransactions = exports.adminChangeNFCPin = exports.adminUnlinkCard = exports.adminLinkCard = exports.registerNFCCard = exports.rejectLoan = exports.approveLoan = exports.deleteEmployee = exports.updateEmployee = exports.createEmployee = exports.getEmployees = exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProducts = exports.deleteCustomer = exports.updateCustomerStatus = exports.updateCustomer = exports.updateWholesalerStatus = exports.updateRetailerStatus = exports.deleteWholesaler = exports.updateWholesaler = exports.verifyWholesaler = exports.verifyRetailer = exports.deleteRetailer = exports.updateRetailer = exports.deleteCategory = exports.updateCategory = exports.createCategory = exports.getCategories = exports.getNFCCards = exports.getLoans = exports.createWholesaler = exports.getWholesalers = exports.createRetailer = exports.getRetailers = exports.createCustomer = exports.getCustomer = exports.getCustomers = exports.getReports = exports.getDashboard = void 0;
-exports.adminUnlinkGasMeter = exports.adminRegisterGasMeter = exports.adminGetGasMeters = exports.endGasPeriod = exports.getProfitInvoiceStats = exports.getProfitInvoiceRecipients = exports.generateAdminProfitInvoice = exports.getAdminProfitInvoices = exports.processRefundRequest = exports.getRefundRequests = exports.getCustomerCreditLimit = exports.updateCustomerCreditLimit = exports.acknowledgeAlert = exports.getSystemAlerts = exports.updateEmailEvent = exports.getEmailEvents = exports.sendManualEmail = exports.deleteEmailTemplate = exports.getTemplateVariables = exports.previewEmailTemplate = exports.saveEmailTemplate = exports.getEmailTemplates = exports.resendEmail = exports.getEmailLogs = exports.confirmWholesaleDelivery = exports.deleteSettlementInvoice = exports.updateSettlementInvoice = exports.getSettlementInvoice = exports.createSettlementInvoice = exports.getSettlementInvoices = exports.unlinkRetailerFromWholesaler = exports.linkRetailerToWholesaler = exports.getRetailerWholesalerLinkage = exports.adminDeleteWholesalerProduct = exports.adminUpdateWholesalerStock = exports.adminUpdateWholesalerProduct = exports.adminShipWholesalerOrder = exports.adminRejectWholesalerOrder = exports.adminConfirmWholesalerOrder = exports.getWholesalerAccountDetails = exports.getWorkerAccountDetails = void 0;
+exports.getCustomerAccountDetails = exports.updateSystemConfig = exports.getSystemConfig = exports.getRevenueReport = exports.getTransactionReport = exports.unlinkNFCCard = exports.activateNFCCard = exports.blockNFCCard = exports.getNFCCardTransactions = exports.adminChangeNFCPin = exports.adminUnlinkCard = exports.adminLinkCard = exports.registerNFCCard = exports.rejectLoan = exports.approveLoan = exports.deleteEmployee = exports.updateEmployee = exports.createEmployee = exports.getEmployees = exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProducts = exports.deleteCustomer = exports.updateCustomerStatus = exports.updateCustomer = exports.updateWholesalerStatus = exports.updateRetailerStatus = exports.deleteWholesaler = exports.updateWholesaler = exports.verifyCustomer = exports.verifyWholesaler = exports.verifyRetailer = exports.deleteRetailer = exports.updateRetailer = exports.deleteCategory = exports.updateCategory = exports.createCategory = exports.getCategories = exports.getNFCCards = exports.getLoans = exports.createWholesaler = exports.getWholesalers = exports.createRetailer = exports.getRetailers = exports.createCustomer = exports.getCustomer = exports.getCustomers = exports.getReports = exports.getDashboard = void 0;
+exports.adminUnlinkGasMeter = exports.adminRegisterGasMeter = exports.adminGetGasMeters = exports.endGasPeriod = exports.getProfitInvoiceStats = exports.getProfitInvoiceRecipients = exports.generateAdminProfitInvoice = exports.getAdminProfitInvoices = exports.processRefundRequest = exports.getRefundRequests = exports.getCustomerCreditLimit = exports.updateCustomerCreditLimit = exports.acknowledgeAlert = exports.getSystemAlerts = exports.updateEmailEvent = exports.getEmailEvents = exports.sendManualEmail = exports.deleteEmailTemplate = exports.getTemplateVariables = exports.previewEmailTemplate = exports.saveEmailTemplate = exports.getEmailTemplates = exports.resendEmail = exports.getEmailLogs = exports.confirmWholesaleDelivery = exports.deleteSettlementInvoice = exports.updateSettlementInvoice = exports.getSettlementInvoice = exports.createSettlementInvoice = exports.getSettlementInvoices = exports.unlinkRetailerFromWholesaler = exports.linkRetailerToWholesaler = exports.getRetailerWholesalerLinkage = exports.adminDeleteWholesalerProduct = exports.adminUpdateWholesalerStock = exports.adminUpdateWholesalerProduct = exports.adminShipWholesalerOrder = exports.adminRejectWholesalerOrder = exports.adminConfirmWholesalerOrder = exports.getWholesalerAccountDetails = exports.getWorkerAccountDetails = exports.getRetailerAccountDetails = void 0;
 const prisma_1 = __importDefault(require("../utils/prisma"));
 const cloudinary_1 = require("../utils/cloudinary");
 const auth_1 = require("../utils/auth");
@@ -1361,9 +1361,8 @@ const deleteRetailer = (req, res) => __awaiter(void 0, void 0, void 0, function*
                             { meterId: { in: consumerProfile.gasMeters.map(m => m.id) } }
                         ]
                     }
-                }), prisma_1.default.gasReward.deleteMany({ where: { consumerId: consumerProfile.id } }), prisma_1.default.gasMeter.deleteMany({ where: { consumerId: consumerProfile.id } }), prisma_1.default.customerOrder.deleteMany({ where: { consumerId: consumerProfile.id } }), prisma_1.default.loan.deleteMany({ where: { consumerId: consumerProfile.id } }), prisma_1.default.nfcCard.updateMany({
-                    where: { consumerId: consumerProfile.id },
-                    data: { consumerId: null, status: 'inactive' }
+                }), prisma_1.default.gasReward.deleteMany({ where: { consumerId: consumerProfile.id } }), prisma_1.default.gasMeter.deleteMany({ where: { consumerId: consumerProfile.id } }), prisma_1.default.customerOrder.deleteMany({ where: { consumerId: consumerProfile.id } }), prisma_1.default.loan.deleteMany({ where: { consumerId: consumerProfile.id } }), prisma_1.default.nfcCard.deleteMany({
+                    where: { consumerId: consumerProfile.id }
                 }), prisma_1.default.saleItem.deleteMany({
                     where: { sale: { consumerId: consumerProfile.id } }
                 }), prisma_1.default.gasReward.updateMany({
@@ -1372,7 +1371,7 @@ const deleteRetailer = (req, res) => __awaiter(void 0, void 0, void 0, function*
                 }), prisma_1.default.sale.deleteMany({ where: { consumerId: consumerProfile.id } }), prisma_1.default.consumerSettings.deleteMany({ where: { consumerId: consumerProfile.id } }), prisma_1.default.consumerProfile.delete({ where: { id: consumerProfile.id } }));
             }
             // Clean up Retailer related records safely before deleting the RetailerProfile
-            transactionOps.push(prisma_1.default.orderItem.deleteMany({ where: { order: { retailerId: Number(id) } } }), prisma_1.default.profitInvoice.deleteMany({ where: { order: { retailerId: Number(id) } } }), prisma_1.default.order.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.gasReward.deleteMany({ where: { sale: { retailerId: Number(id) } } }), prisma_1.default.saleItem.deleteMany({ where: { sale: { retailerId: Number(id) } } }), prisma_1.default.sale.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.product.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.terminal.deleteMany({ where: { branch: { retailerId: Number(id) } } }), prisma_1.default.branch.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.creditRequest.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.retailerCredit.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.settlementInvoice.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.customProfitInvoice.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.walletTransaction.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.linkRequest.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.customerLinkRequest.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.retailerLoan.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.nfcCard.updateMany({ where: { retailerId: Number(id) }, data: { retailerId: null } }), prisma_1.default.consumerProfile.updateMany({ where: { linkedRetailerId: Number(id) }, data: { linkedRetailerId: null } }), prisma_1.default.retailerProfile.delete({ where: { id: Number(id) } }));
+            transactionOps.push(prisma_1.default.orderItem.deleteMany({ where: { order: { retailerId: Number(id) } } }), prisma_1.default.profitInvoice.deleteMany({ where: { order: { retailerId: Number(id) } } }), prisma_1.default.order.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.gasReward.deleteMany({ where: { sale: { retailerId: Number(id) } } }), prisma_1.default.saleItem.deleteMany({ where: { sale: { retailerId: Number(id) } } }), prisma_1.default.sale.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.product.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.terminal.deleteMany({ where: { branch: { retailerId: Number(id) } } }), prisma_1.default.branch.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.creditRequest.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.retailerCredit.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.settlementInvoice.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.customProfitInvoice.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.walletTransaction.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.linkRequest.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.customerLinkRequest.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.retailerLoan.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.nfcCard.deleteMany({ where: { retailerId: Number(id) } }), prisma_1.default.consumerProfile.updateMany({ where: { linkedRetailerId: Number(id) }, data: { linkedRetailerId: null } }), prisma_1.default.retailerProfile.delete({ where: { id: Number(id) } }));
             // Delete Messages and Notifications
             transactionOps.push(prisma_1.default.message.deleteMany({
                 where: { OR: [{ senderId: retailer.userId }, { receiverId: retailer.userId }] }
@@ -1430,6 +1429,26 @@ const verifyWholesaler = (req, res) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.verifyWholesaler = verifyWholesaler;
+const verifyCustomer = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { id } = req.params;
+        // Check if customer exists
+        const customer = yield prisma_1.default.consumerProfile.findUnique({ where: { id: Number(id) } });
+        if (!customer)
+            return res.status(404).json({ success: false, message: 'Customer not found' });
+        // Update isVerified status
+        yield prisma_1.default.consumerProfile.update({
+            where: { id: Number(id) },
+            data: { isVerified: true }
+        });
+        res.json({ success: true, message: 'Customer verified successfully' });
+    }
+    catch (error) {
+        console.error('Verify Customer Error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+exports.verifyCustomer = verifyCustomer;
 // ==========================================
 // WHOLESALER MANAGEMENT (Extra CRUD)
 // ==========================================
@@ -1509,9 +1528,8 @@ const deleteWholesaler = (req, res) => __awaiter(void 0, void 0, void 0, functio
                             { meterId: { in: consumerProfile.gasMeters.map(m => m.id) } }
                         ]
                     }
-                }), prisma_1.default.gasReward.deleteMany({ where: { consumerId: consumerProfile.id } }), prisma_1.default.gasMeter.deleteMany({ where: { consumerId: consumerProfile.id } }), prisma_1.default.customerOrder.deleteMany({ where: { consumerId: consumerProfile.id } }), prisma_1.default.loan.deleteMany({ where: { consumerId: consumerProfile.id } }), prisma_1.default.nfcCard.updateMany({
-                    where: { consumerId: consumerProfile.id },
-                    data: { consumerId: null, status: 'inactive' }
+                }), prisma_1.default.gasReward.deleteMany({ where: { consumerId: consumerProfile.id } }), prisma_1.default.gasMeter.deleteMany({ where: { consumerId: consumerProfile.id } }), prisma_1.default.customerOrder.deleteMany({ where: { consumerId: consumerProfile.id } }), prisma_1.default.loan.deleteMany({ where: { consumerId: consumerProfile.id } }), prisma_1.default.nfcCard.deleteMany({
+                    where: { consumerId: consumerProfile.id }
                 }), prisma_1.default.saleItem.deleteMany({
                     where: { sale: { consumerId: consumerProfile.id } }
                 }), prisma_1.default.gasReward.updateMany({
@@ -1827,16 +1845,9 @@ const deleteCustomer = (req, res) => __awaiter(void 0, void 0, void 0, function*
             prisma_1.default.customerOrder.deleteMany({ where: { consumerId: Number(id) } }),
             // 6. Delete Loans
             prisma_1.default.loan.deleteMany({ where: { consumerId: Number(id) } }),
-            // 7. Unlink or delete NFC cards (unlinking is safer if cards are reusable)
-            prisma_1.default.nfcCard.updateMany({
-                where: { consumerId: Number(id) },
-                data: {
-                    consumerId: null,
-                    status: 'inactive',
-                    cardholderName: null,
-                    email: null,
-                    phone: null
-                }
+            // 7. Delete NFC cards
+            prisma_1.default.nfcCard.deleteMany({
+                where: { consumerId: Number(id) }
             }),
             // 7.5 Delete Sale Items
             prisma_1.default.saleItem.deleteMany({

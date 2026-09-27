@@ -24,6 +24,7 @@ router.post('/customers', adminController_1.createCustomer);
 router.put('/customers/:id', adminController_1.updateCustomer);
 router.delete('/customers/:id', adminController_1.deleteCustomer);
 router.put('/customers/:id/status', adminController_1.updateCustomerStatus);
+router.post('/customers/:id/verify', adminController_1.verifyCustomer);
 router.get('/customers/:id/credit-limit', adminController_1.getCustomerCreditLimit);
 router.put('/customers/:id/credit-limit', adminController_1.updateCustomerCreditLimit);
 // Retailer Routes
