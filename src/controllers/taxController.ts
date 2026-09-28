@@ -30,7 +30,7 @@ export const getRetailerTaxes = async (req: any, res: Response) => {
     const sales = await prisma.sale.findMany({
       where: {
         retailerId: retailer.id,
-        status: { not: 'cancelled' },
+        status: { notIn: ['cancelled', 'failed', 'Failed', 'FAILED', 'rejected'] },
         saleItems: { some: {} },
         ...(dateFilter && { createdAt: dateFilter })
       },
@@ -152,7 +152,7 @@ export const getAdminTaxes = async (req: any, res: Response) => {
 
     const sales = await prisma.sale.findMany({
       where: { 
-        status: { not: 'cancelled' },
+        status: { notIn: ['cancelled', 'failed', 'Failed', 'FAILED', 'rejected'] },
         saleItems: { some: {} }
       },
       include: { saleItems: { include: { product: true } }, consumerProfile: true },

@@ -48,13 +48,13 @@ export const getDashboard = async (req: AuthRequest, res: Response) => {
     const [sales, wholesaleOrders] = await Promise.all([
       prisma.sale.findMany({
         where: {
-          status: { not: 'cancelled' }
+          status: { notIn: ['cancelled', 'failed', 'Failed', 'FAILED', 'rejected'] }
         },
         include: { saleItems: true }
       }),
       prisma.order.findMany({
         where: {
-          status: { not: 'cancelled' }
+          status: { notIn: ['cancelled', 'failed', 'Failed', 'FAILED', 'rejected'] }
         },
         include: { wholesalerProfile: true }
       })
@@ -428,7 +428,7 @@ export const getReports = async (req: AuthRequest, res: Response) => {
       prisma.sale.findMany({
         where: {
           createdAt: { gte: startDate },
-          status: { not: 'cancelled' }
+          status: { notIn: ['cancelled', 'failed', 'Failed', 'FAILED', 'rejected'] }
         },
         include: { saleItems: true }
       }),
@@ -691,7 +691,7 @@ export const getCustomers = async (req: AuthRequest, res: Response) => {
     });
 
     const allSales = await prisma.sale.findMany({
-      where: { status: { not: 'cancelled' } },
+      where: { status: { notIn: ['cancelled', 'failed', 'Failed', 'FAILED', 'rejected'] } },
       include: { saleItems: true }
     });
 
@@ -5525,7 +5525,7 @@ export const getProfitInvoiceStats = async (req: AuthRequest, res: Response) => 
       const sales = await prisma.sale.findMany({
         where: {
           retailerId: Number(id),
-          status: { not: 'cancelled' },
+          status: { notIn: ['cancelled', 'failed', 'Failed', 'FAILED', 'rejected'] },
           ...(dateFilter ? { createdAt: dateFilter } : {})
         },
         include: { saleItems: { include: { product: true } } }

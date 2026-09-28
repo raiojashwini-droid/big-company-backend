@@ -54,7 +54,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
       prisma.sale.findMany({
         where: {
           retailerId: retailerProfile.id,
-          status: { not: 'cancelled' },
+          status: { notIn: ['cancelled', 'failed', 'Failed', 'FAILED', 'rejected'] },
           saleItems: { some: {} },
           ...(dateFilter ? { createdAt: dateFilter } : {})
         }
@@ -89,7 +89,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
     const sales = await prisma.sale.findMany({
       where: {
         retailerId: retailerProfile.id,
-        status: { not: 'cancelled' },  // Exclude cancelled orders from revenue
+        status: { notIn: ['cancelled', 'failed', 'Failed', 'FAILED', 'rejected'] },  // Exclude cancelled/failed orders from revenue
         saleItems: { some: {} },
         ...(dateFilter ? { createdAt: dateFilter } : {})
       },
