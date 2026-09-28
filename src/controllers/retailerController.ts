@@ -46,7 +46,6 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
       prisma.sale.findMany({
         where: {
           retailerId: retailerProfile.id,
-          status: { in: ['completed', 'pending_payment', 'pending'] },
           createdAt: { gte: today, lt: tomorrow },
           saleItems: { some: {} }
         },
@@ -55,7 +54,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
       prisma.sale.findMany({
         where: {
           retailerId: retailerProfile.id,
-          status: { in: ['completed', 'pending_payment', 'pending'] },
+          status: { not: 'cancelled' },
           saleItems: { some: {} },
           ...(dateFilter ? { createdAt: dateFilter } : {})
         }
@@ -90,7 +89,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
     const sales = await prisma.sale.findMany({
       where: {
         retailerId: retailerProfile.id,
-        status: { in: ['completed', 'pending_payment', 'pending'] },
+        status: { not: 'cancelled' },  // Exclude cancelled orders from revenue
         saleItems: { some: {} },
         ...(dateFilter ? { createdAt: dateFilter } : {})
       },
