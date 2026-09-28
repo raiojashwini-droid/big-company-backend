@@ -63,6 +63,7 @@ export const initiateGasMeterRecharge = async (req: AuthRequest, res: Response) 
     let consumerProfileId: number | null = null;
     let totalMoneyAmount = 0;
     let totalVolume = 0;
+    let meter: any = null;
 
     try {
         // Fetch System Configuration for Dynamic Pricing and Minimums
@@ -101,6 +102,64 @@ export const initiateGasMeterRecharge = async (req: AuthRequest, res: Response) 
                 consumerProfileId = consumerProfile.id;
             }
         }
+
+        // --- PRE-VALIDATE METER ---
+        try {
+            meter = await prisma.gasMeter.findFirst({
+                where: {
+                    OR: [
+                        { meterNumber: meterNumber },
+                        { meterNumber: `MTR-${meterNumber}` },
+                        { meterNumber: meterNumber.replace(/^MTR-/i, '') }
+                    ]
+                }
+            });
+
+            // Auto-Register meter if it does not exist but exists in GPRS mappings
+            // Or Auto-Heal it if it exists but is missing the IMEI
+            if (!meter || (meter && !meter.imei)) {
+                const { gprsMapping } = await import('../config/gprsMapping');
+                const matchedMapping = gprsMapping.find(
+                    m => m.meterNo === meterNumber || m.meterNo === meterNumber.replace(/^MTR-/i, '')
+                );
+
+                if (matchedMapping) {
+                    if (!meter && consumerProfileId) {
+                        console.log(`[GasRecharge] Auto-registering matched GPRS meter ${meterNumber} for consumer ${consumerProfileId}...`);
+                        meter = await prisma.gasMeter.create({
+                            data: {
+                                consumerId: consumerProfileId,
+                                meterNumber: matchedMapping.meterNo,
+                                imei: matchedMapping.imei,
+                                serialNo: matchedMapping.serialNo,
+                                meterKey: matchedMapping.meterKey,
+                                isGprs: true,
+                                meterType: 'PIPING',
+                                status: 'active'
+                            }
+                        });
+                    } else if (meter && !meter.imei) {
+                        console.log(`[GasRecharge] Auto-healing missing IMEI for meter ${meterNumber}`);
+                        meter = await prisma.gasMeter.update({
+                            where: { id: meter.id },
+                            data: {
+                                imei: matchedMapping.imei,
+                                serialNo: matchedMapping.serialNo,
+                                meterKey: matchedMapping.meterKey,
+                                isGprs: true
+                            }
+                        });
+                    }
+                }
+            }
+        } catch (lookupErr: any) {
+            console.error('[GasRecharge] Error during meter lookup/registration:', lookupErr.message);
+        }
+
+        if (!meter) {
+            return res.status(400).json({ success: false, error: 'Invalid Meter ID. Please check the code and try again.' });
+        }
+        // --- END PRE-VALIDATE METER ---
 
         // Only deduct if authenticated and using a payment method
         if (userId && (paymentMethod === 'wallet' || paymentMethod === 'credit_wallet' || paymentMethod === 'gas_rewards' || paymentMethod === 'nfc_card')) {
@@ -291,60 +350,6 @@ export const initiateGasMeterRecharge = async (req: AuthRequest, res: Response) 
 
     // --- STEP 3: Call the appropriate Meter API (routed by provider) ---
     let apiResult: any;
-
-    // Resolve or auto-register GasMeter from predefined mappings
-    let meter: any = null;
-    try {
-        meter = await prisma.gasMeter.findFirst({
-            where: {
-                OR: [
-                    { meterNumber: meterNumber },
-                    { meterNumber: `MTR-${meterNumber}` },
-                    { meterNumber: meterNumber.replace(/^MTR-/i, '') }
-                ]
-            }
-        });
-
-        // Auto-Register meter if it does not exist but exists in GPRS mappings
-        // Or Auto-Heal it if it exists but is missing the IMEI
-        if (!meter || (meter && !meter.imei)) {
-            const { gprsMapping } = await import('../config/gprsMapping');
-            const matchedMapping = gprsMapping.find(
-                m => m.meterNo === meterNumber || m.meterNo === meterNumber.replace(/^MTR-/i, '')
-            );
-
-            if (matchedMapping) {
-                if (!meter && consumerProfileId) {
-                    console.log(`[GasRecharge] Auto-registering matched GPRS meter ${meterNumber} for consumer ${consumerProfileId}...`);
-                    meter = await prisma.gasMeter.create({
-                        data: {
-                            consumerId: consumerProfileId,
-                            meterNumber: matchedMapping.meterNo,
-                            imei: matchedMapping.imei,
-                            serialNo: matchedMapping.serialNo,
-                            meterKey: matchedMapping.meterKey,
-                            isGprs: true,
-                            meterType: 'PIPING',
-                            status: 'active'
-                        }
-                    });
-                } else if (meter && !meter.imei) {
-                    console.log(`[GasRecharge] Auto-healing missing IMEI for meter ${meterNumber}`);
-                    meter = await prisma.gasMeter.update({
-                        where: { id: meter.id },
-                        data: {
-                            imei: matchedMapping.imei,
-                            serialNo: matchedMapping.serialNo,
-                            meterKey: matchedMapping.meterKey,
-                            isGprs: true
-                        }
-                    });
-                }
-            }
-        }
-    } catch (lookupErr: any) {
-        console.error('[GasRecharge] Error during meter lookup/registration:', lookupErr.message);
-    }
 
     try {
         if (selectedProvider === 'zhongyi') {
