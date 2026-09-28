@@ -358,7 +358,11 @@ export const sendToMeter = async (req: AuthRequest, res: Response) => {
             }
         });
 
-        const targetMeterNumber = meter ? meter.meterNumber : meterId;
+        if (!meter) {
+            return res.status(400).json({ success: false, error: 'Invalid Meter ID. Please check the code and try again.' });
+        }
+
+        const targetMeterNumber = meter.meterNumber;
 
         // 2. Map to Official Recharge Flow
         const rechargeReq = {
