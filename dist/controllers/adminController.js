@@ -90,13 +90,13 @@ const getDashboard = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const [sales, wholesaleOrders] = yield Promise.all([
             prisma_1.default.sale.findMany({
                 where: {
-                    status: { not: 'cancelled' }
+                    status: { notIn: ['cancelled', 'failed', 'Failed', 'FAILED', 'rejected'] }
                 },
                 include: { saleItems: true }
             }),
             prisma_1.default.order.findMany({
                 where: {
-                    status: { not: 'cancelled' }
+                    status: { notIn: ['cancelled', 'failed', 'Failed', 'FAILED', 'rejected'] }
                 },
                 include: { wholesalerProfile: true }
             })
@@ -423,7 +423,7 @@ const getReports = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             prisma_1.default.sale.findMany({
                 where: {
                     createdAt: { gte: startDate },
-                    status: { not: 'cancelled' }
+                    status: { notIn: ['cancelled', 'failed', 'Failed', 'FAILED', 'rejected'] }
                 },
                 include: { saleItems: true }
             }),
@@ -655,7 +655,7 @@ const getCustomers = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 gasBalance });
         });
         const allSales = yield prisma_1.default.sale.findMany({
-            where: { status: { not: 'cancelled' } },
+            where: { status: { notIn: ['cancelled', 'failed', 'Failed', 'FAILED', 'rejected'] } },
             include: { saleItems: true }
         });
         let totalPlatformRevenue = 0;
@@ -4911,7 +4911,7 @@ const getProfitInvoiceStats = (req, res) => __awaiter(void 0, void 0, void 0, fu
                 return res.status(404).json({ success: false, error: 'Retailer not found' });
             const dateFilter = retailer.lastSettlementDate ? { gte: retailer.lastSettlementDate } : undefined;
             const sales = yield prisma_1.default.sale.findMany({
-                where: Object.assign({ retailerId: Number(id), status: { not: 'cancelled' } }, (dateFilter ? { createdAt: dateFilter } : {})),
+                where: Object.assign({ retailerId: Number(id), status: { notIn: ['cancelled', 'failed', 'Failed', 'FAILED', 'rejected'] } }, (dateFilter ? { createdAt: dateFilter } : {})),
                 include: { saleItems: { include: { product: true } } }
             });
             const systemConfig = yield prisma_1.default.systemConfig.findFirst();

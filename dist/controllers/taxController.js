@@ -33,7 +33,7 @@ const getRetailerTaxes = (req, res) => __awaiter(void 0, void 0, void 0, functio
         // Only retailer's sales to consumers — include 'pending' for USSD orders
         // Exclude gas meter recharges — they never have saleItems; only product orders do
         const sales = yield prisma.sale.findMany({
-            where: Object.assign({ retailerId: retailer.id, status: { in: ['completed', 'pending_payment', 'pending'] }, saleItems: { some: {} } }, (dateFilter && { createdAt: dateFilter })),
+            where: Object.assign({ retailerId: retailer.id, status: { notIn: ['cancelled', 'failed', 'Failed', 'FAILED', 'rejected'] }, saleItems: { some: {} } }, (dateFilter && { createdAt: dateFilter })),
             include: {
                 saleItems: { include: { product: true } },
                 consumerProfile: true
@@ -136,7 +136,7 @@ const getAdminTaxes = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         const wholesalerSettlementMap = new Map(allWholesalers.map(w => [w.id, w]));
         const sales = yield prisma.sale.findMany({
             where: {
-                status: { in: ['completed', 'pending_payment', 'pending'] },
+                status: { notIn: ['cancelled', 'failed', 'Failed', 'FAILED', 'rejected'] },
                 saleItems: { some: {} }
             },
             include: { saleItems: { include: { product: true } }, consumerProfile: true },
